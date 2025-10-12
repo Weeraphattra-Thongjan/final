@@ -1,29 +1,32 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+@extends('layout')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+@section('content')
+    <h2>แก้ไขโปรไฟล์</h2>
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
+    <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
 
-            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
+        <div class="form-group">
+            <label for="name">ชื่อ</label>
+            <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
         </div>
-    </div>
-</x-app-layout>
+
+        <div class="form-group">
+            <label for="email">อีเมล์</label>
+            <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="phone">เบอร์โทรศัพท์</label>
+            <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone) }}">
+        </div>
+
+        <div class="form-group">
+            <label for="avatar">รูปโปรไฟล์</label>
+            <input type="file" name="avatar" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-success">บันทึกการเปลี่ยนแปลง</button>
+    </form>
+@endsection

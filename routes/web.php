@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\ProfileController;
+
 
 Route::get('/', [HomeController::class, 'index']) ->name('index');
 Route::get('/create', [HomeController::class, 'create']) ->name('create');
@@ -21,3 +23,18 @@ Route::get('/register', [RegisteredUserController::class, 'create'])->name('regi
 
 // Route สำหรับการบันทึกการสมัครสมาชิก
 Route::post('/register', [RegisteredUserController::class, 'store']);
+// Route สำหรับการออกจากระบบ
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+Route::middleware(['auth'])->group(function () {
+    // เส้นทางสำหรับหน้าโปรไฟล์
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+
+    // เส้นทางสำหรับการแก้ไขโปรไฟล์
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // เส้นทางสำหรับการเปลี่ยนรหัสผ่าน
+    Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.changePassword');
+    Route::put('/profile/change-password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
+});

@@ -9,50 +9,35 @@ use Illuminate\Support\Facades\Hash;
 class ProfileController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * แสดงหน้าโปรไฟล์
      */
     public function index()
     {
-        //
+        // ดึงข้อมูลของผู้ใช้ที่เข้าสู่ระบบ
+        $user = Auth::user();
+        
+        // ส่งข้อมูลผู้ใช้ไปยังหน้าโปรไฟล์
+        return view('profile.index', compact('user'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * แสดงฟอร์มแก้ไขโปรไฟล์
      */
-    public function create()
+    public function edit()
     {
-        //
+        // ดึงข้อมูลผู้ใช้ที่เข้าสู่ระบบ
+        $user = Auth::user();
+        
+        // ส่งข้อมูลไปยังฟอร์มแก้ไขโปรไฟล์
+        return view('profile.edit', compact('user'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * อัปเดตข้อมูลโปรไฟล์
      */
-    public function store(Request $request)
+    public function update(Request $request)
     {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Profile $profile)
-    {
-        return view('profile.show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Profile $profile)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Profile $profile)
-    {
+        // ตรวจสอบข้อมูลที่กรอก
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
@@ -60,27 +45,57 @@ class ProfileController extends Controller
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
+        // ดึงข้อมูลผู้ใช้ที่เข้าสู่ระบบ
         $user = Auth::user();
+        
+        // อัปเดตข้อมูลที่ผู้ใช้กรอก
         $user->name = $request->name;
         $user->email = $request->email;
         $user->phone = $request->phone;
 
-        // อัปโหลดรูปโปรไฟล์
+        // อัปโหลดรูปโปรไฟล์ถ้ามี
         if ($request->hasFile('avatar')) {
             $avatar = $request->file('avatar')->store('avatars', 'public');
             $user->avatar = $avatar;
         }
 
+        // บันทึกการเปลี่ยนแปลง
         $user->save();
 
-        return redirect()->route('profile.show')->with('success', 'โปรไฟล์ของคุณได้รับการอัปเดต');
+        // เปลี่ยนเส้นทางกลับไปที่หน้าโปรไฟล์
+        return redirect()->route('profile')->with('success', 'โปรไฟล์ของคุณได้รับการอัปเดต');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * แสดงฟอร์มเปลี่ยนรหัสผ่าน
      */
-    public function destroy(Profile $profile)
+    public function changePassword()
     {
-        //
+        return view('profile.change-password');
+    }
+
+    /**
+     * อัปเดตการเปลี่ยนรหัสผ่าน
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = Auth::user();
+
+        // ตรวจสอบรหัสผ่านปัจจุบัน
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง']);
+        }
+
+        // อัปเดตรหัสผ่านใหม่
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return redirect()->route('profile')->with('success', 'รหัสผ่านของคุณได้รับการอัปเดต');
     }
 }
+

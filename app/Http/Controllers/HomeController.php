@@ -4,7 +4,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\home;
+use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -13,8 +15,10 @@ class HomeController extends Controller
      */
     public function index()
     {
-        //แสดงหน้าแรก
-        $posts = Home::all(); // ดึงข้อมูลโพสต์ทั้งหมด
+        // ดึงข้อมูลโพสพร้อมกับข้อมูลผู้โพสและคอมเมนต์
+        $posts = Home::with('user', 'comments')->get();
+
+        // ส่งข้อมูลไปที่หน้า index.blade.php
         return view('index', compact('posts'));
     }
 
@@ -30,53 +34,88 @@ class HomeController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
+{
+    // ตรวจสอบข้อมูลจากฟอร์ม
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'content' => 'required|string',
+        'category' => 'nullable|string', // ตรวจสอบ category
+    ]);
+
+    // สร้างโพสต์ใหม่
+    Home::create([
+        'title' => $request->title,
+        'content' => $request->content,
+        'category' => $request->category, // ใช้ category
+    ]);
+
+    // กลับไปที่หน้าหลักพร้อมข้อความ success
+    return redirect()->route('index')->with('success', 'โพสต์ของคุณถูกสร้างเรียบร้อยแล้ว');
+}
+
+
+
+    /**
+     * แสดงโพส.
+     */
+   public function show(Home $home)
     {
-        // ตรวจสอบข้อมูลที่กรอกในฟอร์ม
+        return view('home.show', compact('home'));
+    }
+
+    /**
+     *แก้ไขโพส
+     */
+    public function edit(Home $home)
+    {
+        return view('home.edit', compact('home'));
+    }
+
+    /**
+     * อัปเดตโพส
+     */
+    public function update(Request $request, Home $home)
+    {
         $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
+            'category' => 'required|string',
         ]);
 
-        // สร้างโพสต์ใหม่
-        Home::create([
-            'title' => $request->title,
-            'content' => $request->content,
+        $home->title = $request->title;
+        $home->content = $request->content;
+        $home->category = $request->category;
+        
+        $home->save();
+
+        return redirect()->route('index')->with('success', 'โพสของคุณได้รับการอัปเดต');
+    }
+
+    /**
+     *  ลบโพส
+     */
+    public function destroy(Home $home)
+    {
+        $home->delete();
+
+        return redirect()->route('index')->with('success', 'โพสของคุณถูกลบแล้ว');
+    }
+
+    /**
+     * เพิ่มคอมเม้นต์
+     */
+    public function storeComment(Request $request, Home $home)
+    {
+        $request->validate([
+            'content' => 'required|string',
         ]);
 
-        // เปลี่ยนเส้นทางไปที่หน้า index พร้อมกับข้อความ success
-        return redirect()->route('index')->with('success', 'โพสต์ถูกสร้างแล้ว');
+        $comment = new Comment();
+        $comment->content = $request->content;
+        $comment->home_id = $home->id; // ใช้ home_id สำหรับคอมเม้นต์
+        $comment->user_id = Auth::id(); // ผู้ตอบ
+        $comment->save();
 
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(home $home)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(home $home)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, home $home)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(home $home)
-    {
-        //
+        return back()->with('success', 'คอมเม้นต์ของคุณถูกเพิ่มเรียบร้อย');
     }
 }
