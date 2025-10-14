@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up()
 {
-    Schema::create('comments', function (Blueprint $table) {
+     Schema::create('comments', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('home_id')->constrained('homes')->onDelete('cascade'); // เชื่อมโยงกับ home table
-        $table->text('content'); // เนื้อหาของคอมเมนต์
-        $table->foreignId('user_id')->constrained()->onDelete('cascade'); // ผู้ตอบคอมเมนต์
+        $table->foreignId('home_id')->constrained()->onDelete('cascade');
+        $table->foreignId('user_id')->constrained()->onDelete('cascade');
+        $table->text('content');
+        $table->string('image')->nullable();
         $table->timestamps();
     });
 }

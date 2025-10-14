@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+
 
 class ProfileController extends Controller
 {
@@ -53,10 +55,16 @@ class ProfileController extends Controller
         $user->email = $request->email;
         $user->phone = $request->phone;
 
-        // อัปโหลดรูปโปรไฟล์ถ้ามี
+        // ถ้ามีอัปโหลดรูปใหม่
         if ($request->hasFile('avatar')) {
-            $avatar = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $avatar;
+            // ลบรูปเก่าถ้ามี (และเป็นไฟล์ใน storage)
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            // เก็บรูปใหม่ในโฟลเดอร์ storage/app/public/avatars
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
         }
 
         // บันทึกการเปลี่ยนแปลง

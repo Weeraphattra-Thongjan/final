@@ -17,6 +17,16 @@
                 @enderror
             </div>
 
+             <!-- เบอร์โทร -->
+            <div class="form-group mt-3">
+                <label for="phone">เบอร์โทรศัพท์</label>
+                <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}" required />
+            @error('phone')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
+            </div>
+
+
             <!-- อีเมล์ -->
             <div class="form-group mt-3">
                 <label for="email">อีเมล์</label>

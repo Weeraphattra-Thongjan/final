@@ -24,6 +24,7 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'phone' => ['required', 'string', 'max:15'],  //การตรวจสอบเบอร์โทรศัพท์
         ]);
 
         // สร้างผู้ใช้ใหม่
@@ -31,6 +32,7 @@ class RegisteredUserController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'phone' => $request->phone, // บันทึกเบอร์โทรศัพท์
         ]);
 
         // เข้าสู่ระบบผู้ใช้หลังจากสมัคร

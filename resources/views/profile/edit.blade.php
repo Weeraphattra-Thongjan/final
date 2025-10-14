@@ -7,6 +7,13 @@
         @csrf
         @method('PUT')
 
+        <div class="text-center mb-3">
+            {{-- ถ้ามีรูปใน database ให้ใช้รูปนั้น ถ้าไม่มีให้ใช้ default-avatar.png --}}
+            <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('storage/avatars/default-avatar.png') }}"
+                class="rounded-circle" width="180" alt="Avatar">
+
+        </div>
+
         <div class="form-group">
             <label for="name">ชื่อ</label>
             <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
@@ -19,11 +26,14 @@
 
         <div class="form-group">
             <label for="phone">เบอร์โทรศัพท์</label>
-            <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone) }}">
+            <input type="text" name="phone" class="form-control"
+                value="{{ old('phone', Auth::user()->phone) }}" />
+        @error('phone')<div class="text-danger">{{ $message }}</div>@enderror
         </div>
 
-        <div class="form-group">
-            <label for="avatar">รูปโปรไฟล์</label>
+
+        <div class="form-group mt-3">
+            <label for="avatar">รูปโปรไฟล์ใหม่</label>
             <input type="file" name="avatar" class="form-control">
         </div>
 

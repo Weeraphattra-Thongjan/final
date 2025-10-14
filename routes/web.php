@@ -6,12 +6,14 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CommentController;
 
 
 Route::get('/', [HomeController::class, 'index']) ->name('index');
 Route::get('/create', [HomeController::class, 'create']) ->name('create');
 Route::post('/store', [HomeController::class, 'store']) ->name('store');
-Route::middleware('auth')->get('/create', [HomeController::class, 'create'])->name('create');
+Route::post('/post/{home_id}/comment', [CommentController::class, 'store'])->name('comment.store');
+Route::get('/post/{home}', [HomeController::class, 'show'])->name('show');
 // Route สำหรับหน้าเข้าสู่ระบบ
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
 // Route สำหรับการส่งข้อมูลเข้าสู่ระบบ

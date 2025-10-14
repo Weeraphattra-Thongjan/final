@@ -22,6 +22,6 @@
             <input type="password" name="new_password_confirmation" class="form-control" required>
         </div>
 
-        <button type="submit" class="btn btn-success">บันทึกการเปลี่ยนรหัสผ่าน</button>
+        <button type="submit" class="btn btn-success mt-4">บันทึกการเปลี่ยนรหัสผ่าน</button>
     </form>
 @endsection

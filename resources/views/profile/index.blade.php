@@ -5,14 +5,17 @@
         <h2 class="text-center mb-4" style="font-size: 2rem;">โปรไฟล์ของคุณ</h2> <!-- ปรับขนาดตัวอักษร -->
 
         <div class="text-center">
-            <!-- รูปโปรไฟล์ -->
-            <img src="{{ asset('storage/' . $user->avatar) }}" alt="Avatar" class="rounded-circle" width="250" />
+            {{-- ถ้ามี avatar ใน DB ให้แสดงจาก storage / ถ้าไม่มีให้แสดงรูป default --}}
+            <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('storage/avatars/default-avatar.png') }}"
+                class="rounded-circle" width="180" alt="Avatar">
+
         </div>
 
         <div class="profile-info mt-4 text-center" style="font-size: 1.25rem;"> <!-- เพิ่มขนาดตัวอักษร -->
             <p><strong>ชื่อ:</strong> {{ $user->name }}</p>
             <p><strong>อีเมล์:</strong> {{ $user->email }}</p>
-            <p><strong>เบอร์โทรศัพท์:</strong> {{ $user->phone }}</p>
+            <p><strong>เบอร์โทรศัพท์:</strong> {{ $user->phone ?? '-' }}</p>
+
         </div>
 
         <div class="text-center mt-4">

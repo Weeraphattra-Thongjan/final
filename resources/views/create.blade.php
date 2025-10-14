@@ -21,5 +21,6 @@
             <input type="file" name="image" class="form-control">
         </div>
         <button type="submit" class="btn btn-primary">โพส</button>
+        <a href="{{ route ('index') }}" class="btn btn-secondary"> Back </a>
     </form>
 @endsection

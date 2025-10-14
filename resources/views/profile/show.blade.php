@@ -19,7 +19,7 @@
 
         <div class="form-group">
             <label for="phone">เบอร์โทรศัพท์</label>
-            <input type="text" name="phone" class="form-control" value="{{ Auth::user()->phone }}">
+            <input type="text" name="phone" class="form-control" value="{{ Auth::user()->phone }}" required>
         </div>
 
         <div class="form-group">
