@@ -7,24 +7,25 @@ use App\Models\Comment;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
 {
     /**
-     * หน้าแรก: แสดงโพสต์ทั้งหมดพร้อมผู้โพสต์และจำนวนคอมเมนต์
+     * หน้าแรก: แสดงโพสต์ทั้งหมด (public)
      */
     public function index()
     {
         $posts = Home::with('user')
             ->withCount('comments')
             ->latest()
-            ->get();
+            ->paginate(10); // แบ่งหน้าให้ลื่นขึ้น (ปรับจำนวนได้)
 
         return view('index', compact('posts'));
     }
 
     /**
-     * ฟอร์มสร้างโพสต์ (route: posts.create)
+     * ฟอร์มสร้างโพสต์ (ต้องล็อกอิน)
      */
     public function create()
     {
@@ -33,17 +34,27 @@ class HomeController extends Controller
     }
 
     /**
-     * แสดงโพสต์เดี่ยว (route: posts.show)
+     * แสดงโพสต์เดี่ยว (public)
      */
     public function show(Home $home)
     {
-        $home->load(['user', 'comments.user'])->loadCount('comments');
+        // ดึงโพสต์พร้อมผู้เขียน
+        $home->load('user')->loadCount('comments');
 
-        return view('show', compact('home'));
+        // ดึงคอมเมนต์เรียงล่าสุด พร้อมผู้คอมเมนต์
+        $comments = $home->comments()
+            ->with('user')
+            ->latest()
+            ->get();
+
+        return view('show', [
+            'home'     => $home,
+            'comments' => $comments,
+        ]);
     }
 
     /**
-     * บันทึกโพสต์ใหม่ (route: posts.store)
+     * บันทึกโพสต์ใหม่ (ต้องล็อกอิน)
      */
     public function store(Request $request)
     {
@@ -74,19 +85,18 @@ class HomeController extends Controller
     }
 
     /**
-     * ฟอร์มแก้ไขโพสต์ (route: posts.edit)
+     * ฟอร์มแก้ไขโพสต์ (ต้องเป็นเจ้าของโพสต์)
      */
     public function edit(Home $home)
     {
         abort_unless($home->user_id === Auth::id(), 403);
 
         $categories = Category::orderBy('name')->get();
-
         return view('edit', compact('home', 'categories'));
     }
 
     /**
-     * อัปเดตโพสต์ (route: posts.update)
+     * อัปเดตโพสต์ (ต้องเป็นเจ้าของโพสต์)
      */
     public function update(Request $request, Home $home)
     {
@@ -117,7 +127,7 @@ class HomeController extends Controller
     }
 
     /**
-     * ลบโพสต์ (route: posts.destroy)
+     * ลบโพสต์ (ต้องเป็นเจ้าของโพสต์)
      */
     public function destroy(Home $home)
     {
@@ -131,7 +141,7 @@ class HomeController extends Controller
     }
 
     /**
-     * เพิ่มคอมเมนต์ใต้โพสต์ (route: comment.store)
+     * เพิ่มคอมเมนต์ใต้โพสต์ (ต้องล็อกอิน)
      */
     public function storeComment(Request $request, Home $home)
     {
@@ -155,6 +165,49 @@ class HomeController extends Controller
             ->route('posts.show', ['home' => $home->id])
             ->with('success', 'คอมเมนต์ของคุณถูกเพิ่มเรียบร้อย');
     }
+    /**
+ * แก้ไขคอมเมนต์ (เฉพาะเจ้าของคอมเมนต์)
+ */
+public function updateComment(Request $request, Home $home, Comment $comment)
+{
+    // อนุญาตเฉพาะเจ้าของคอมเมนต์
+    abort_unless(Auth::id() === $comment->user_id, 403);
+
+    $validated = $request->validate([
+        'content' => ['required', 'string'],
+        'image'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
+    ]);
+
+    // อัปเดตข้อความ
+    $comment->content = $validated['content'];
+
+    // ถ้ามีอัปโหลดรูปใหม่ — ลบรูปเก่า (ถ้ามี) แล้วบันทึกรูปใหม่
+    if ($request->hasFile('image')) {
+        if (!empty($comment->image)) {
+            Storage::disk('public')->delete($comment->image);
+        }
+        $comment->image = $request->file('image')->store('comment_images', 'public');
+    }
+
+    $comment->save();
+
+    return back()->with('success', 'แก้ไขคอมเมนต์เรียบร้อยแล้ว');
+}
+
+    /**
+     * ลบคอมเมนต์ (เจ้าของคอมเมนต์หรือเจ้าของโพสต์)
+     */
+    public function destroyComment(Home $home, Comment $comment)
+{
+    abort_unless(
+        Auth::id() === $comment->user_id || Auth::id() === $home->user_id,
+        403
+    );
+
+    $comment->delete();
+
+    return back()->with('success', 'ลบคอมเมนต์เรียบร้อยแล้ว');
+}
 
     /**
      * แสดงโพสต์ตามหมวดหมู่ (public)
@@ -167,7 +220,7 @@ class HomeController extends Controller
             ->with('user')
             ->withCount('comments')
             ->latest()
-            ->get();
+            ->paginate(10);
 
         return view('categories.show', compact('category', 'posts'));
     }

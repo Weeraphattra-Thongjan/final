@@ -41,11 +41,14 @@
 
 <div class="home-wrap">
 
-  <h2 class="mb-4 text-center fw-bold">Welcome ชุมชน-ถามตอบ</h2>
+<div class="welcome-section text-center mt-4">
+  <h1 class="welcome-title">ยินดีต้อนรับสู่ Wetalk</h1>
+  <img src="{{ asset('images/wetalk-logo.png') }}" alt="Wetalk Logo" class="welcome-logo">
+</div>
 
   {{-- ปุ่มตั้งกระทู้ --}}
   @auth
-    <a href="{{ route('posts.create') }}" class="btn-post mb-3">ตั้งกระทู้ของคุณเลย!</a>
+    <a href="{{ route('posts.create') }}" class="btn-post mb-3">สร้างโพสต์ของคุณเลย✨​​</a>
   @else
     <a href="{{ route('login') }}" class="btn-post mb-3">เข้าสู่ระบบเพื่อโพสต์</a>
   @endauth
@@ -89,6 +92,18 @@
   </div>
 
   {{-- 📰 ลิสต์โพสต์ --}}
+  @php
+    // cache slug ของ category ตามชื่อ เพื่อลด query ซ้ำในลูป
+    static $catSlugCache = [];
+    $slugOf = function($name) use (&$catSlugCache) {
+        if (!$name) return null;
+        if (!array_key_exists($name, $catSlugCache)) {
+            $catSlugCache[$name] = \App\Models\Category::where('name', $name)->value('slug');
+        }
+        return $catSlugCache[$name];
+    };
+  @endphp
+
   @if ($posts->count())
     @foreach ($posts as $post)
       <div class="post-card">
@@ -120,9 +135,7 @@
             </h3>
 
             <div class="post-meta">
-              @php
-                $catSlug = \App\Models\Category::where('name', $post->category)->value('slug');
-              @endphp
+              @php $catSlug = $slugOf($post->category); @endphp
               <a href="{{ $catSlug ? route('categories.show', $catSlug) : '#' }}" class="badge-cat">🏷️ {{ $post->category ?? '-' }}</a>
               <span>👤 {{ $post->user->name ?? 'ไม่ระบุผู้ใช้' }}</span>
               <span>🕒 {{ $post->created_at?->diffForHumans() }}</span>
