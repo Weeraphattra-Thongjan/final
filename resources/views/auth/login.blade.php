@@ -3,7 +3,7 @@
 @section('content')
     <div class="container">
         <h2 class="mb-4">เข้าสู่ระบบ</h2>
-        
+
         <!-- ตรวจสอบข้อความสถานะจาก session -->
         @if(session('status'))
             <div class="alert alert-success">
@@ -15,7 +15,7 @@
         <form method="POST" action="{{ route('login') }}">
             @csrf
             <div class="form-group">
-                <label for="email">อีเมล์</label>
+                <label for="email">อีเมล</label>
                 <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" required autofocus>
                 @error('email')
                     <div class="text-danger">{{ $message }}</div>

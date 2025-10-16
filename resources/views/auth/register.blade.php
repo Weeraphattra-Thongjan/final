@@ -29,7 +29,7 @@
 
             <!-- อีเมล์ -->
             <div class="form-group mt-3">
-                <label for="email">อีเมล์</label>
+                <label for="email">อีเมล</label>
                 <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" required>
                 @error('email')
                     <div class="text-danger">{{ $message }}</div>

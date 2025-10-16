@@ -14,31 +14,33 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'phone',  // เพิ่มฟิลด์เบอร์โทร
-        'avatar', // เพิ่มฟิลด์รูปโปรไฟล์
+        'phone',   // เบอร์โทร
+        'avatar',  // รูปโปรไฟล์ (path ใต้ storage/app/public)
         'role',
     ];
 
-    // ฟิลด์ที่ไม่ต้องการแสดง
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    public function isAdmin()
+    public function isAdmin(): bool
     {
-        return $this->role === 'admin'; // ตรวจสอบว่าผู้ใช้เป็น admin หรือไม่
+        return $this->role === 'admin';
     }
 
-    public function getAvatarUrlAttribute()
+    /**
+     * Accessor: เรียก $user->avatar_url เพื่อได้ URL ของรูปโปรไฟล์
+     * - ถ้ามีไฟล์ที่อัปโหลด -> storage/<path>
+     * - ถ้าไม่มี -> public/images/default-avatar.png
+     */
+    public function getAvatarUrlAttribute(): string
     {
-        // ถ้ามีอัปโหลดรูปจริง → ใช้รูปจาก storage
-        if ($this->avatar) {
-         return asset('storage/' . $this->avatar);
+        if (!empty($this->avatar)) {
+            return asset('storage/' . ltrim($this->avatar, '/'));
         }
 
-        // ถ้าไม่มี → ใช้รูปเริ่มต้น
+        // วางไฟล์รูปเริ่มต้นไว้ที่ public/images/default-avatar.png
         return asset('images/default-avatar.png');
     }
 }
-

@@ -4,106 +4,88 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-
+use App\Models\Home; // ✅ ใช้ Home (ไม่ใช่ Post)
 
 class ProfileController extends Controller
 {
-    /**
-     * แสดงหน้าโปรไฟล์
-     */
-    public function index()
+    public function __construct()
     {
-        // ดึงข้อมูลของผู้ใช้ที่เข้าสู่ระบบ
-        $user = Auth::user();
-        
-        // ส่งข้อมูลผู้ใช้ไปยังหน้าโปรไฟล์
-        return view('profile.index', compact('user'));
+        // ใช้ middleware auth ผ่าน route group ก็พอ
+        // ถ้าเว็บคุณไม่ใช้ Kernel แบบปกติของ Laravel 12+ แล้ว error ตรงนี้
+        // สามารถลบทิ้ง/คอมเมนต์บรรทัดนี้ได้
+        // $this->middleware('auth');
     }
 
     /**
-     * แสดงฟอร์มแก้ไขโปรไฟล์
+     * หน้าโปรไฟล์: แสดงรายการโพสต์ของเรา
+     */
+    public function index()
+    {
+        $user = Auth::user();
+
+        // ✅ ดึงโพสต์ของผู้ใช้ + นับคอมเมนต์ ผ่าน relation 'comments' ที่เพิ่งแก้ให้ใช้ home_id
+        $posts = Home::with('user')
+            ->withCount('comments')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->get();
+
+        return view('profile.index', compact('user', 'posts'));
+    }
+
+    /**
+     * แก้ไขข้อมูลส่วนตัว (ฟอร์ม)
      */
     public function edit()
     {
-        // ดึงข้อมูลผู้ใช้ที่เข้าสู่ระบบ
         $user = Auth::user();
-        
-        // ส่งข้อมูลไปยังฟอร์มแก้ไขโปรไฟล์
         return view('profile.edit', compact('user'));
     }
 
     /**
-     * อัปเดตข้อมูลโปรไฟล์
+     * อัปเดตข้อมูลส่วนตัว
      */
     public function update(Request $request)
     {
-        // ตรวจสอบข้อมูลที่กรอก
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . Auth::id(),
-            'phone' => 'nullable|string|max:15',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        $user = Auth::user();
+
+        $data = $request->validate([
+            'name'  => ['required','string','max:255'],
+            'email' => ['required','email','max:255'],
+            'phone' => ['nullable','string','max:50'],
+            'avatar'=> ['nullable','image','mimes:jpg,jpeg,png,webp','max:2048'],
         ]);
 
-        // ดึงข้อมูลผู้ใช้ที่เข้าสู่ระบบ
-        $user = Auth::user();
-        
-        // อัปเดตข้อมูลที่ผู้ใช้กรอก
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->phone = $request->phone;
-
-        // ถ้ามีอัปโหลดรูปใหม่
         if ($request->hasFile('avatar')) {
-            // ลบรูปเก่าถ้ามี (และเป็นไฟล์ใน storage)
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-            }
-
-            // เก็บรูปใหม่ในโฟลเดอร์ storage/app/public/avatars
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $path;
+            $data['avatar'] = $request->file('avatar')->store('avatars', 'public');
         }
 
-        // บันทึกการเปลี่ยนแปลง
-        $user->save();
+        $user->update($data);
 
-        // เปลี่ยนเส้นทางกลับไปที่หน้าโปรไฟล์
-        return redirect()->route('profile')->with('success', 'โปรไฟล์ของคุณได้รับการอัปเดต');
+        return redirect()->route('profile')->with('success', 'อัปเดตโปรไฟล์เรียบร้อย');
     }
 
     /**
-     * แสดงฟอร์มเปลี่ยนรหัสผ่าน
+     * ฟอร์มเปลี่ยนรหัสผ่าน
      */
-    public function changePassword()
+    public function passwordForm()
     {
-        return view('profile.change-password');
+        return view('profile.password');
     }
 
     /**
-     * อัปเดตการเปลี่ยนรหัสผ่าน
+     * อัปเดตรหัสผ่าน
      */
-    public function updatePassword(Request $request)
+    public function passwordUpdate(Request $request)
     {
         $request->validate([
-            'current_password' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed',
+            'password' => ['required','confirmed','min:8'],
         ]);
 
         $user = Auth::user();
-
-        // ตรวจสอบรหัสผ่านปัจจุบัน
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'รหัสผ่านปัจจุบันไม่ถูกต้อง']);
-        }
-
-        // อัปเดตรหัสผ่านใหม่
-        $user->password = Hash::make($request->new_password);
+        $user->password = bcrypt($request->password);
         $user->save();
 
-        return redirect()->route('profile')->with('success', 'รหัสผ่านของคุณได้รับการอัปเดต');
+        return redirect()->route('profile')->with('success', 'เปลี่ยนรหัสผ่านแล้ว');
     }
 }
-

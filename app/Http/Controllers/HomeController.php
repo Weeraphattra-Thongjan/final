@@ -4,139 +4,171 @@ namespace App\Http\Controllers;
 
 use App\Models\Home;
 use App\Models\Comment;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
     /**
-     * แสดงโพสต์พร้อมกับผู้โพสต์และคอมเมนต์
+     * หน้าแรก: แสดงโพสต์ทั้งหมดพร้อมผู้โพสต์และจำนวนคอมเมนต์
      */
     public function index()
     {
-        // ดึงข้อมูลโพสพร้อมกับข้อมูลผู้โพสและคอมเมนต์
-        $posts = Home::with('user', 'comments')->get();
+        $posts = Home::with('user')
+            ->withCount('comments')
+            ->latest()
+            ->get();
 
-        // ส่งข้อมูลไปที่หน้า index.blade.php
         return view('index', compact('posts'));
     }
 
     /**
-     * ฟอร์มสร้างโพสต์
+     * ฟอร์มสร้างโพสต์ (route: posts.create)
      */
     public function create()
     {
-        return view('create'); // หน้าฟอร์มการสร้างโพสต์
+        $categories = Category::orderBy('name')->get();
+        return view('create', compact('categories'));
     }
 
-    public function show($home_id)
+    /**
+     * แสดงโพสต์เดี่ยว (route: posts.show)
+     */
+    public function show(Home $home)
     {
-        $home = Home::findOrFail($home_id);
+        $home->load(['user', 'comments.user'])->loadCount('comments');
+
         return view('show', compact('home'));
     }
 
-
     /**
-     * สร้างโพสต์ใหม่
+     * บันทึกโพสต์ใหม่ (route: posts.store)
      */
     public function store(Request $request)
     {
-        // ตรวจสอบข้อมูลจากฟอร์ม
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'category' => 'nullable|string', // ตรวจสอบ category
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // รองรับการอัปโหลดรูป
+        $validated = $request->validate([
+            'title'       => ['required', 'string', 'max:255'],
+            'content'     => ['required', 'string'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'image'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
         ]);
 
-        // สร้างโพสต์ใหม่
-        $home = new Home();
-        $home->title = $request->title;
-        $home->content = $request->content;
-        $home->category = $request->category;
+        $category = Category::findOrFail($validated['category_id']);
 
-        // การอัปโหลดรูปภาพ
+        $home = new Home();
+        $home->title    = $validated['title'];
+        $home->content  = $validated['content'];
+        $home->category = $category->name;
+        $home->user_id  = Auth::id();
+
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('home_images', 'public');
-            $home->image = $imagePath;
+            $home->image = $request->file('image')->store('home_images', 'public');
         }
 
         $home->save();
 
-        return redirect()->route('index')->with('success', 'โพสต์ของคุณถูกสร้างเรียบร้อยแล้ว');
+        return redirect()
+            ->route('posts.show', ['home' => $home->id])
+            ->with('success', 'โพสต์ของคุณถูกสร้างเรียบร้อยแล้ว');
     }
 
     /**
-     * ฟอร์มแก้ไขโพสต์
+     * ฟอร์มแก้ไขโพสต์ (route: posts.edit)
      */
     public function edit(Home $home)
     {
-        return view('home.edit', compact('home'));
+        abort_unless($home->user_id === Auth::id(), 403);
+
+        $categories = Category::orderBy('name')->get();
+
+        return view('edit', compact('home', 'categories'));
     }
 
     /**
-     * อัปเดตโพสต์
+     * อัปเดตโพสต์ (route: posts.update)
      */
     public function update(Request $request, Home $home)
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'category' => 'required|string',
+        abort_unless($home->user_id === Auth::id(), 403);
+
+        $validated = $request->validate([
+            'title'       => ['required', 'string', 'max:255'],
+            'content'     => ['required', 'string'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'image'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
         ]);
 
-        // อัปเดตโพสต์
-        $home->title = $request->title;
-        $home->content = $request->content;
-        $home->category = $request->category;
+        $category = Category::findOrFail($validated['category_id']);
 
-        // อัปเดตการอัปโหลดรูปภาพถ้ามี
+        $home->title    = $validated['title'];
+        $home->content  = $validated['content'];
+        $home->category = $category->name;
+
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('home_images', 'public');
-            $home->image = $imagePath;
+            $home->image = $request->file('image')->store('home_images', 'public');
         }
 
         $home->save();
 
-        return redirect()->route('index')->with('success', 'โพสต์ของคุณได้รับการอัปเดต');
+        return redirect()
+            ->route('posts.show', ['home' => $home->id])
+            ->with('success', 'โพสต์ของคุณได้รับการอัปเดตแล้ว');
     }
 
     /**
-     * ลบโพสต์
+     * ลบโพสต์ (route: posts.destroy)
      */
     public function destroy(Home $home)
     {
+        abort_unless($home->user_id === Auth::id(), 403);
+
         $home->delete();
 
-        return redirect()->route('index')->with('success', 'โพสต์ของคุณถูกลบแล้ว');
+        return redirect()
+            ->route('index')
+            ->with('success', 'โพสต์ของคุณถูกลบแล้ว');
     }
 
     /**
-     * เพิ่มคอมเมนต์
+     * เพิ่มคอมเมนต์ใต้โพสต์ (route: comment.store)
      */
     public function storeComment(Request $request, Home $home)
     {
-        $request->validate([
-            'content' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // รองรับการอัปโหลดรูปในคอมเมนต์
+        $validated = $request->validate([
+            'content' => ['required', 'string'],
+            'image'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
         ]);
 
-        // สร้างคอมเมนต์ใหม่
         $comment = new Comment();
-        $comment->content = $request->content;
-        $comment->home_id = $home->id; // ใช้ home_id สำหรับคอมเมนต์
-        $comment->user_id = Auth::id(); // ผู้ตอบ
+        $comment->content = $validated['content'];
+        $comment->home_id = $home->id;
+        $comment->user_id = Auth::id();
 
-        // การอัปโหลดรูปภาพในคอมเมนต์
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('comment_images', 'public');
-            $comment->image = $imagePath;
+            $comment->image = $request->file('image')->store('comment_images', 'public');
         }
 
         $comment->save();
 
-        return back()->with('success', 'คอมเมนต์ของคุณถูกเพิ่มเรียบร้อย');
+        return redirect()
+            ->route('posts.show', ['home' => $home->id])
+            ->with('success', 'คอมเมนต์ของคุณถูกเพิ่มเรียบร้อย');
     }
 
-    
+    /**
+     * แสดงโพสต์ตามหมวดหมู่ (public)
+     */
+    public function category($slug)
+    {
+        $category = Category::where('slug', $slug)->firstOrFail();
+
+        $posts = Home::where('category', $category->name)
+            ->with('user')
+            ->withCount('comments')
+            ->latest()
+            ->get();
+
+        return view('categories.show', compact('category', 'posts'));
+    }
 }

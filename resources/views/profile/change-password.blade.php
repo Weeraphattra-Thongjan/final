@@ -1,27 +1,29 @@
 @extends('layout')
 
 @section('content')
-    <h2>เปลี่ยนรหัสผ่าน</h2>
+  <h2 class="mb-4 text-center fw-bold">เปลี่ยนรหัสผ่าน</h2>
 
-    <form action="{{ route('profile.updatePassword') }}" method="POST">
-        @csrf
-        @method('PUT')
+  <form action="{{ route('profile.password.update') }}" method="POST" class="mx-auto" style="max-width:520px;">
+    @csrf
+    @method('PUT')
 
-        <div class="form-group">
-            <label for="current_password">รหัสผ่านปัจจุบัน</label>
-            <input type="password" name="current_password" class="form-control" required>
-        </div>
+    <div class="mb-3">
+      <label class="form-label">รหัสผ่านเดิม</label>
+      <input type="password" name="current_password" class="form-control" required>
+      @error('current_password')<div class="text-danger small">{{ $message }}</div>@enderror
+    </div>
 
-        <div class="form-group">
-            <label for="new_password">รหัสผ่านใหม่</label>
-            <input type="password" name="new_password" class="form-control" required>
-        </div>
+    <div class="mb-3">
+      <label class="form-label">รหัสผ่านใหม่</label>
+      <input type="password" name="password" class="form-control" required>
+      @error('password')<div class="text-danger small">{{ $message }}</div>@enderror
+    </div>
 
-        <div class="form-group">
-            <label for="new_password_confirmation">ยืนยันรหัสผ่านใหม่</label>
-            <input type="password" name="new_password_confirmation" class="form-control" required>
-        </div>
+    <div class="mb-4">
+      <label class="form-label">ยืนยันรหัสผ่านใหม่</label>
+      <input type="password" name="password_confirmation" class="form-control" required>
+    </div>
 
-        <button type="submit" class="btn btn-success mt-4">บันทึกการเปลี่ยนรหัสผ่าน</button>
-    </form>
+    <button type="submit" class="btn btn-primary">บันทึก</button>
+  </form>
 @endsection

@@ -13,7 +13,7 @@
         </div>
 
         <div class="form-group">
-            <label for="email">อีเมล์</label>
+            <label for="email">อีเมล</label>
             <input type="email" name="email" class="form-control" value="{{ Auth::user()->email }}" required>
         </div>
 
