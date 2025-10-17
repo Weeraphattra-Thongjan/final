@@ -126,7 +126,6 @@
 
     <div class="button-row">
       <button type="submit" class="btn-primary">โพสต์</button>
-      <a href="{{ url('/') }}" class="btn-secondary">กลับ</a>
     </div>
   </form>
 </div>

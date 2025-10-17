@@ -29,7 +29,7 @@ class HomeController extends Controller
      */
     public function create()
     {
-        $categories = Category::orderBy('name')->get();
+        $categories = Category::all(); // ดึงข้อมูลจากตาราง categories
         return view('create', compact('categories'));
     }
 
@@ -89,7 +89,7 @@ class HomeController extends Controller
      */
     public function edit(Home $home)
     {
-        abort_unless($home->user_id === Auth::id(), 403);
+        abort_unless($home->user_id === Auth::id() || Auth::user()->role === 'admin', 403);
 
         $categories = Category::orderBy('name')->get();
         return view('edit', compact('home', 'categories'));
@@ -100,7 +100,7 @@ class HomeController extends Controller
      */
     public function update(Request $request, Home $home)
     {
-        abort_unless($home->user_id === Auth::id(), 403);
+        abort_unless($home->user_id === Auth::id() || Auth::user()->role === 'admin', 403);
 
         $validated = $request->validate([
             'title'       => ['required', 'string', 'max:255'],
@@ -131,7 +131,7 @@ class HomeController extends Controller
      */
     public function destroy(Home $home)
     {
-        abort_unless($home->user_id === Auth::id(), 403);
+        abort_unless($home->user_id === Auth::id() || Auth::user()->role === 'admin', 403);
 
         $home->delete();
 
@@ -170,8 +170,8 @@ class HomeController extends Controller
  */
 public function updateComment(Request $request, Home $home, Comment $comment)
 {
-    // อนุญาตเฉพาะเจ้าของคอมเมนต์
-    abort_unless(Auth::id() === $comment->user_id, 403);
+    // อนุญาตเฉพาะเจ้าของคอมเมนต์and_admin
+    abort_unless(Auth::id() === $comment->user_id || optional(Auth::user())->role === 'admin', 403);
 
     $validated = $request->validate([
         'content' => ['required', 'string'],
@@ -200,7 +200,7 @@ public function updateComment(Request $request, Home $home, Comment $comment)
     public function destroyComment(Home $home, Comment $comment)
 {
     abort_unless(
-        Auth::id() === $comment->user_id || Auth::id() === $home->user_id,
+        Auth::id() === $comment->user_id || Auth::id() === $home->user_id || optional(Auth::user())->role === 'admin',
         403
     );
 

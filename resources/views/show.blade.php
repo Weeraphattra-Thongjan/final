@@ -50,7 +50,7 @@
 
   {{-- ปุ่มแก้ไข/ลบโพสต์ (เฉพาะเจ้าของโพสต์) --}}
   @auth
-    @if(Auth::id() === $home->user_id)
+    @if(Auth::id() === $home->user_id|| Auth::user()->role === 'admin' )
       <div class="post-actions">
         <a href="{{ route('posts.edit', $home->id) }}" class="action-btn" title="แก้ไขโพสต์">✏️</a>
         <form action="{{ route('posts.destroy', $home->id) }}" method="POST" onsubmit="return confirm('ลบโพสต์นี้หรือไม่?')" class="d-inline">

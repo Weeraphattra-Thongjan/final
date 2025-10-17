@@ -79,8 +79,16 @@ class PostController extends Controller
     public function destroy($id)
     {
         $post = Post::findOrFail($id);
+
+        // ตรวจสิทธิ์: ต้องเป็นเจ้าของโพสต์ หรือเป็น admin
+        if ($post->user_id !== Auth::id() && Auth::user()->role !== 'admin') {
+            abort(403, 'คุณไม่มีสิทธิ์ลบโพสต์นี้');
+
         $post->delete();
 
         return redirect()->route('posts.index')->with('success', 'ลบโพสต์เรียบร้อยแล้ว!');
     }
+
+}
+
 }
