@@ -1,56 +1,95 @@
-@extends('layout') <!-- ใช้ layout หลักของคุณ -->
+@extends('layout')
 
 @section('content')
-    <div class="container">
-        <h2 class="mb-4">เข้าสู่ระบบ</h2>
+<style>
+  body {
+    background-color: #F5EBFA;
+  }
 
-        <!-- ตรวจสอบข้อความสถานะจาก session -->
-        @if(session('status'))
-            <div class="alert alert-success">
-                {{ session('status') }}
-            </div>
-        @endif
+  .auth-container {
+    max-width: 480px;
+    margin: 60px auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 35px 40px;
+    box-shadow: 0 4px 18px rgba(147, 112, 219, 0.2);
+    border: 1px solid #f1e6ff;
+  }
 
-        <!-- ฟอร์มการเข้าสู่ระบบ -->
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-            <div class="form-group">
-                <label for="email">อีเมล</label>
-                <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" required autofocus>
-                @error('email')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
+  .auth-title {
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: #4B0082;
+    margin-bottom: 25px;
+  }
 
-            <div class="form-group mt-3">
-                <label for="password">รหัสผ่าน</label>
-                <input type="password" name="password" id="password" class="form-control" required>
-                @error('password')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
+  .form-control {
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid #d8c9f5;
+  }
 
-            <!-- Remember me -->
-            <div class="form-check mt-3">
-                <input type="checkbox" name="remember" id="remember" class="form-check-input">
-                <label for="remember" class="form-check-label">จดจำฉัน</label>
-            </div>
+  .btn-gradient {
+    background: linear-gradient(90deg, #b57edc, #9370db);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    width: 100%;
+    padding: 10px 0;
+    font-weight: 600;
+    transition: 0.3s ease;
+    box-shadow: 0 3px 8px rgba(147, 112, 219, 0.3);
+  }
 
-            <div class="form-group mt-20">
-                <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
-            </div>
+  .btn-gradient:hover {
+    background: linear-gradient(90deg, #9370db, #b57edc);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(147, 112, 219, 0.4);
+  }
 
-            <!-- ลืมรหัสผ่าน -->
-            @if (Route::has('password.request'))
-                <div class="mt-3">
-                    <a href="{{ route('password.request') }}" class="text-sm">ลืมรหัสผ่าน?</a>
-                </div>
-            @endif
-        </form>
+  .auth-footer {
+    text-align: center;
+    margin-top: 20px;
+  }
 
-        <!-- ลิงก์ไปยังหน้าสมัครสมาชิก -->
-        <div class="mt-4 text-center">
-            <p>ยังไม่มีบัญชี? <a href="{{ route('register') }}" class="btn btn-link">สมัครสมาชิก</a></p>
-        </div>
+  .auth-footer a {
+    color: #9370db;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .auth-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+<div class="auth-container">
+  <h2 class="auth-title">เข้าสู่ระบบ</h2>
+
+  <form method="POST" action="{{ route('login') }}">
+    @csrf
+
+    <div class="mb-3">
+      <label for="email" class="form-label">อีเมล</label>
+      <input id="email" type="email" class="form-control" name="email" required autofocus>
     </div>
+
+    <div class="mb-3">
+      <label for="password" class="form-label">รหัสผ่าน</label>
+      <input id="password" type="password" class="form-control" name="password" required>
+    </div>
+
+    <div class="form-check mb-3">
+      <input class="form-check-input" type="checkbox" name="remember" id="remember">
+      <label class="form-check-label" for="remember">จดจำฉัน</label>
+    </div>
+
+    <button type="submit" class="btn-gradient">เข้าสู่ระบบ</button>
+  </form>
+
+  <div class="auth-footer">
+    <p>ยังไม่มีบัญชี? <a href="{{ route('register') }}">สมัครสมาชิก</a></p>
+  </div>
+</div>
 @endsection

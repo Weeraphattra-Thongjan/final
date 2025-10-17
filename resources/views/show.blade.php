@@ -23,6 +23,27 @@
   .action-btn{background:none;border:none;font-size:1.4rem;line-height:1;cursor:pointer;transition:transform .2s,opacity .2s}
   .action-btn.delete{color:#dc3545}
   .action-btn:hover{transform:scale(1.2);opacity:.85}
+
+  /* --- ปุ่มไล่สีธีม Wetalk --- */
+  .btn-gradient{
+    display:inline-block;
+    background:linear-gradient(90deg,#8B5CF6,#EC4899);
+    color:#fff !important;
+    font-weight:700;
+    padding:10px 22px;
+    border:none;
+    border-radius:999px;
+    box-shadow:0 4px 12px rgba(139,92,246,.35);
+    transition:all .25s ease;
+  }
+  .btn-gradient:hover{
+    background:linear-gradient(90deg,#7C3AED,#DB2777);
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(139,92,246,.45);
+  }
+  .btn-light-soft{
+    background:#f3f1ff;border:1px solid #e6e1ff;color:#5b43c9;
+  }
 </style>
 
 <div class="topic-container position-relative">
@@ -71,109 +92,108 @@
   @if(session('success')) <div class="alert alert-success">{{ session('success') }}</div> @endif
 
   {{-- คอมเมนต์ --}}
-<div class="d-flex align-items-center justify-content-between mb-2">
-  <div class="cmt-title">คอมเมนต์</div>
-  <div class="text-muted small">
-    ทั้งหมด {{ $home->comments_count ?? $home->comments->count() }} ความคิดเห็น
-  </div>
-</div>
-
-@forelse($home->comments as $cmt)
-  <div class="cmt-card">
-    {{-- header ของคอมเมนต์ (อยู่ในลูป จึงใช้ $cmt ได้) --}}
-    <div class="cmt-head">
-      <div class="left">
-        <strong>{{ $cmt->user->name ?? 'ไม่ระบุผู้ใช้' }}</strong>
-        <span>•</span>
-        <span>{{ $cmt->created_at?->diffForHumans() }}</span>
-      </div>
-
-      @auth
-        <div>
-          {{-- เจ้าของคอมเมนต์ แก้ไข/ลบได้ --}}
-          @if(Auth::id() === $cmt->user_id)
-            <button type="button" class="cmt-action-btn" title="แก้ไขคอมเมนต์"
-                    onclick="toggleEditForm({{ $cmt->id }})">✏️</button>
-          @endif
-
-          {{-- เจ้าของคอมเมนต์ หรือ เจ้าของโพสต์ ลบได้ --}}
-          @if(Auth::id() === $cmt->user_id || Auth::id() === $home->user_id)
-            <form action="{{ route('comment.destroy', ['home' => $home->id, 'comment' => $cmt->id]) }}"
-                  method="POST" onsubmit="return confirm('ลบคอมเมนต์นี้ใช่ไหม?')"
-                  style="display:inline">
-              @csrf
-              @method('DELETE')
-              <button type="submit" class="cmt-action-btn" title="ลบคอมเมนต์">🗑️</button>
-            </form>
-          @endif
-        </div>
-      @endauth
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div class="cmt-title">คอมเมนต์</div>
+    <div class="text-muted small">
+      ทั้งหมด {{ $home->comments_count ?? $home->comments->count() }} ความคิดเห็น
     </div>
+  </div>
 
-    {{-- เนื้อหา/รูป --}}
-    <div class="cmt-body">{{ $cmt->content }}</div>
+  @forelse($home->comments as $cmt)
+    <div class="cmt-card">
+      <div class="cmt-head">
+        <div class="left">
+          <strong>{{ $cmt->user->name ?? 'ไม่ระบุผู้ใช้' }}</strong>
+          <span>•</span>
+          <span>{{ $cmt->created_at?->diffForHumans() }}</span>
+        </div>
 
-    @if(!empty($cmt->image))
-      <div class="mt-2">
-        <img src="{{ asset('storage/'.$cmt->image) }}" alt="comment image"
-             style="max-width:100%;border-radius:8px">
+        @auth
+          <div>
+            {{-- เจ้าของคอมเมนต์ แก้ไข/ลบได้ --}}
+            @if(Auth::id() === $cmt->user_id)
+              <button type="button" class="cmt-action-btn" title="แก้ไขคอมเมนต์"
+                      onclick="toggleEditForm({{ $cmt->id }})">✏️</button>
+            @endif
+
+            {{-- เจ้าของคอมเมนต์ หรือ เจ้าของโพสต์ ลบได้ --}}
+            @if(Auth::id() === $cmt->user_id || Auth::id() === $home->user_id)
+              <form action="{{ route('comment.destroy', ['home' => $home->id, 'comment' => $cmt->id]) }}"
+                    method="POST" onsubmit="return confirm('ลบคอมเมนต์นี้ใช่ไหม?')"
+                    style="display:inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="cmt-action-btn" title="ลบคอมเมนต์">🗑️</button>
+              </form>
+            @endif
+          </div>
+        @endauth
       </div>
-    @endif
 
-    {{-- ฟอร์มแก้ไข (ซ่อน) --}}
-    @auth
-      @if(Auth::id() === $cmt->user_id)
-        <div id="edit-cmt-{{ $cmt->id }}" class="mt-2" style="display:none;">
-          <form action="{{ route('comment.update', ['home' => $home->id, 'comment' => $cmt->id]) }}"
-                method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
-            <textarea name="content" class="form-control" rows="3" required>{{ old('content', $cmt->content) }}</textarea>
-            <div class="mt-2">
-              <label class="form-label">รูปใหม่ (ถ้ามี)</label>
-              <input type="file" name="image" class="form-control">
-            </div>
-            <div class="mt-2 d-flex gap-2">
-              <button class="btn btn-sm btn-primary">บันทึก</button>
-              <button type="button" class="btn btn-sm btn-light"
-                      onclick="toggleEditForm({{ $cmt->id }})">ยกเลิก</button>
-            </div>
-          </form>
+      {{-- เนื้อหา/รูป --}}
+      <div class="cmt-body">{{ $cmt->content }}</div>
+
+      @if(!empty($cmt->image))
+        <div class="mt-2">
+          <img src="{{ asset('storage/'.$cmt->image) }}" alt="comment image"
+               style="max-width:100%;border-radius:8px">
         </div>
       @endif
-    @endauth
-  </div>
-@empty
-  <div class="alert alert-info">ยังไม่มีคอมเมนต์</div>
-@endforelse
 
-{{-- ฟอร์มเพิ่มคอมเมนต์ --}}
-@auth
-  <div class="topic-divider"></div>
-  <form action="{{ route('comment.store', $home->id) }}" method="POST" enctype="multipart/form-data" class="cmt-form">
-    @csrf
-    <div class="mb-2">
-      <label class="form-label">คอมเมนต์</label>
-      <textarea name="content" class="form-control" rows="3" required>{{ old('content') }}</textarea>
-      @error('content') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+      {{-- ฟอร์มแก้ไข (ซ่อน) --}}
+      @auth
+        @if(Auth::id() === $cmt->user_id)
+          <div id="edit-cmt-{{ $cmt->id }}" class="mt-2" style="display:none;">
+            <form action="{{ route('comment.update', ['home' => $home->id, 'comment' => $cmt->id]) }}"
+                  method="POST" enctype="multipart/form-data">
+              @csrf
+              @method('PUT')
+              <textarea name="content" class="form-control" rows="3" required>{{ old('content', $cmt->content) }}</textarea>
+              <div class="mt-2">
+                <label class="form-label">รูปใหม่ (ถ้ามี)</label>
+                <input type="file" name="image" class="form-control">
+              </div>
+              <div class="mt-2 d-flex gap-2">
+                <button class="btn btn-sm btn-gradient">บันทึก</button>
+                <button type="button" class="btn btn-sm btn-light-soft"
+                        onclick="toggleEditForm({{ $cmt->id }})">ยกเลิก</button>
+              </div>
+            </form>
+          </div>
+        @endif
+      @endauth
     </div>
-    <div class="mb-3">
-      <label class="form-label">รูปภาพ (ถ้ามี)</label>
-      <input type="file" name="image" class="form-control">
-      @error('image') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-    </div>
-    <button class="btn btn-primary">ส่งคอมเมนต์</button>
-  </form>
-@else
-  <div class="alert alert-light border">เข้าสู่ระบบเพื่อแสดงความคิดเห็น</div>
-@endauth
+  @empty
+    <div class="alert alert-info">ยังไม่มีคอมเมนต์</div>
+  @endforelse
 
-<script>
-function toggleEditForm(id){
-  const el = document.getElementById('edit-cmt-' + id);
-  if (!el) return;
-  el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
-}
-</script>
+  {{-- ฟอร์มเพิ่มคอมเมนต์ --}}
+  @auth
+    <div class="topic-divider"></div>
+    <form action="{{ route('comment.store', $home->id) }}" method="POST" enctype="multipart/form-data" class="cmt-form">
+      @csrf
+      <div class="mb-2">
+        <label class="form-label">คอมเมนต์</label>
+        <textarea name="content" class="form-control" rows="3" required>{{ old('content') }}</textarea>
+        @error('content') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+      </div>
+      <div class="mb-3">
+        <label class="form-label">รูปภาพ (ถ้ามี)</label>
+        <input type="file" name="image" class="form-control">
+        @error('image') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+      </div>
+      <button type="submit" class="btn-gradient">ส่ง</button>
+    </form>
+  @else
+    <div class="alert alert-light border">เข้าสู่ระบบเพื่อแสดงความคิดเห็น</div>
+  @endauth
+
+  <script>
+    function toggleEditForm(id){
+      const el = document.getElementById('edit-cmt-' + id);
+      if (!el) return;
+      el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+    }
+  </script>
 
 @endsection

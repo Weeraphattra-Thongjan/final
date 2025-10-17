@@ -1,65 +1,91 @@
 @extends('layout')
 
 @section('content')
-    <div class="container">
-        <h2>สมัครสมาชิก</h2>
+<style>
+  body { background-color:#F5EBFA; }
+  .auth-wrap{
+    max-width:520px; margin:60px auto; background:#fff; border-radius:20px;
+    padding:34px 40px; border:1px solid #f1e6ff;
+    box-shadow:0 6px 22px rgba(147,112,219,.18);
+  }
+  .auth-title{
+    text-align:center; font-weight:800; font-size:1.9rem; color:#4B0082; margin-bottom:22px;
+  }
+  .form-label{ font-weight:600; color:#3b2e6d; }
+  .form-control{
+    border-radius:12px; padding:12px 14px; border:1px solid #d9ccf6;
+  }
+  .form-control:focus{
+    border-color:#b58df3; box-shadow:0 0 0 .2rem rgba(147,112,219,.15);
+  }
+  .btn-gradient{
+    display:block; width:100%; border:none; border-radius:12px; padding:12px 16px;
+    background:linear-gradient(90deg,#b57edc,#9370db); color:#fff; font-weight:700;
+    box-shadow:0 6px 16px rgba(147,112,219,.35); transition:.25s ease;
+  }
+  .btn-gradient:hover{
+    background:linear-gradient(90deg,#9370db,#b57edc); transform:translateY(-2px);
+    box-shadow:0 10px 20px rgba(147,112,219,.45);
+    color:#fff;
+  }
+  .auth-footer{ text-align:center; margin-top:16px; }
+  .auth-footer a{ color:#7a59d8; font-weight:700; text-decoration:none; }
+  .auth-footer a:hover{ text-decoration:underline; }
+  .text-danger{ font-size:.9rem; }
+</style>
 
-        <!-- ฟอร์มการสมัครสมาชิก -->
-        <form method="POST" action="{{ route('register') }}">
-            @csrf
+<div class="auth-wrap">
+  <h2 class="auth-title">สมัครสมาชิก</h2>
 
-            <!-- ชื่อผู้ใช้ -->
-            <div class="form-group">
-                <label for="name">ชื่อ</label>
-                <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required>
-                @error('name')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
+  <form method="POST" action="{{ route('register') }}">
+    @csrf
 
-             <!-- เบอร์โทร -->
-            <div class="form-group mt-3">
-                <label for="phone">เบอร์โทรศัพท์</label>
-                <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}" required />
-            @error('phone')
-                <div class="text-danger">{{ $message }}</div>
-            @enderror
-            </div>
-
-
-            <!-- อีเมล์ -->
-            <div class="form-group mt-3">
-                <label for="email">อีเมล</label>
-                <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" required>
-                @error('email')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- รหัสผ่าน -->
-            <div class="form-group mt-3">
-                <label for="password">รหัสผ่าน</label>
-                <input type="password" name="password" id="password" class="form-control" required>
-                @error('password')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- ยืนยันรหัสผ่าน -->
-            <div class="form-group mt-3">
-                <label for="password_confirmation">ยืนยันรหัสผ่าน</label>
-                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" required>
-            </div>
-
-            <!-- ปุ่มสมัครสมาชิก -->
-            <div class="form-group mt-4">
-                <button type="submit" class="btn btn-primary">สมัครสมาชิก</button>
-            </div>
-        </form>
-
-        <!-- ลิงก์ไปยังหน้าเข้าสู่ระบบ -->
-        <div class="mt-3 text-center">
-            <p>มีบัญชีอยู่แล้ว? <a href="{{ route('login') }}" class="btn btn-link">เข้าสู่ระบบ</a></p>
-        </div>
+    {{-- ชื่อผู้ใช้ --}}
+    <div class="mb-3">
+      <label for="name" class="form-label">ชื่อ</label>
+      <input type="text" name="name" id="name" class="form-control"
+             value="{{ old('name') }}" required autocomplete="name" autofocus>
+      @error('name') <div class="text-danger mt-1">{{ $message }}</div> @enderror
     </div>
+
+    {{-- เบอร์โทร --}}
+    <div class="mb-3">
+      <label for="phone" class="form-label">เบอร์โทรศัพท์</label>
+      <input type="text" name="phone" id="phone" class="form-control"
+             value="{{ old('phone') }}" required>
+      @error('phone') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+    </div>
+
+    {{-- อีเมล --}}
+    <div class="mb-3">
+      <label for="email" class="form-label">อีเมล</label>
+      <input type="email" name="email" id="email" class="form-control"
+             value="{{ old('email') }}" required autocomplete="email">
+      @error('email') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+    </div>
+
+    {{-- รหัสผ่าน --}}
+    <div class="mb-3">
+      <label for="password" class="form-label">รหัสผ่าน</label>
+      <input type="password" name="password" id="password" class="form-control"
+             required autocomplete="new-password">
+      @error('password') <div class="text-danger mt-1">{{ $message }}</div> @enderror
+    </div>
+
+    {{-- ยืนยันรหัสผ่าน --}}
+    <div class="mb-4">
+      <label for="password_confirmation" class="form-label">ยืนยันรหัสผ่าน</label>
+      <input type="password" name="password_confirmation" id="password_confirmation"
+             class="form-control" required autocomplete="new-password">
+    </div>
+
+    <button type="submit" class="btn-gradient">สมัครสมาชิก</button>
+  </form>
+
+  <div class="auth-footer">
+    <p class="mb-0">มีบัญชีอยู่แล้ว?
+      <a href="{{ route('login') }}">เข้าสู่ระบบ</a>
+    </p>
+  </div>
+</div>
 @endsection
