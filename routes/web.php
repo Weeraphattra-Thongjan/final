@@ -9,8 +9,8 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Middleware\AdminMiddleware;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -75,4 +75,6 @@ Route::middleware(['auth', AdminMiddleware::class])
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard'); 
         Route::resource('categories', AdminCategoryController::class)->except(['show']);
+        // เพิ่ม resource routes สำหรับจัดการผู้ใช้ (admin.users.*)
+        Route::resource('users', AdminUserController::class)->except(['show']);
     });

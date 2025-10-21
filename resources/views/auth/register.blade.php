@@ -32,6 +32,16 @@
   .auth-footer a{ color:#7a59d8; font-weight:700; text-decoration:none; }
   .auth-footer a:hover{ text-decoration:underline; }
   .text-danger{ font-size:.9rem; }
+
+  .avatar-select img {
+    opacity: 0.6;
+    border: 2px solid transparent;
+  }
+  .avatar-select input:checked + img {
+    opacity: 1;
+    border-color: #0d6efd;
+    transform: scale(1.05);
+  }
 </style>
 
 <div class="auth-wrap">
@@ -39,6 +49,21 @@
 
   <form method="POST" action="{{ route('register') }}">
     @csrf
+
+    {{-- Avatar --}}
+    <div class="mb-3">
+      <label class="form-label">Avatar (เลือก)</label>
+      <div class="d-flex gap-2 flex-wrap">
+        @for($i=1; $i<=6; $i++)
+          @php $path = 'images/avatars/avatar ('.$i.').png'; @endphp
+          <label style="cursor:pointer" class="avatar-select">
+            <input type="radio" name="avatar" value="{{ $path }}" class="d-none">
+            <img src="{{ asset($path) }}" alt="avatar {{$i}}"
+                 style="width:56px;height:56px;object-fit:cover;border-radius:8px;transition:all 0.2s">
+          </label>
+        @endfor
+      </div>
+    </div>
 
     {{-- ชื่อผู้ใช้ --}}
     <div class="mb-3">

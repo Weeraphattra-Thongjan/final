@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class RegisteredUserController extends Controller
 {
@@ -21,18 +22,25 @@ class RegisteredUserController extends Controller
     {
         // ตรวจสอบข้อมูลที่กรอก
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'phone' => ['required', 'string', 'max:15'],  //การตรวจสอบเบอร์โทรศัพท์
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|confirmed|min:8',
+            'phone' => 'nullable|string|max:50',
+            'avatar' => 'nullable|string',
         ]);
+
+        $avatar = $request->input('avatar');
+        if ($avatar && !file_exists(public_path($avatar))) {
+            $avatar = null;
+        }
 
         // สร้างผู้ใช้ใหม่
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'phone' => $request->phone, // บันทึกเบอร์โทรศัพท์
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'avatar' => $avatar,
+            'password' => Hash::make($request->password),
         ]);
 
         // เข้าสู่ระบบผู้ใช้หลังจากสมัคร

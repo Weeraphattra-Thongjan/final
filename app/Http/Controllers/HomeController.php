@@ -17,7 +17,10 @@ class HomeController extends Controller
      */
     public function index()
 {
-    $posts = Home::with('user')->withCount('comments')->latest()->paginate(10);
+    // เพิ่ม select avatar เข้าไปใน user relationship
+    $posts = Home::with(['user' => function($q) {
+        $q->select('id', 'name', 'email', 'avatar');
+    }])->withCount('comments')->latest()->paginate(10);
 
     $categories = Cache::remember('homepage.categories', 300, function () {
         return Category::orderBy('name')->get(['id','name','slug']);
@@ -40,12 +43,16 @@ class HomeController extends Controller
      */
     public function show(Home $home)
     {
-        // ดึงโพสต์พร้อมผู้เขียน
-        $home->load('user')->loadCount('comments');
+        // เพิ่ม select avatar ในการ load user
+        $home->load(['user' => function($q) {
+            $q->select('id', 'name', 'email', 'avatar');
+        }])->loadCount('comments');
 
-        // ดึงคอมเมนต์เรียงล่าสุด พร้อมผู้คอมเมนต์
+        // เพิ่ม select avatar ในการ load user ของ comments
         $comments = $home->comments()
-            ->with('user')
+            ->with(['user' => function($q) {
+                $q->select('id', 'name', 'email', 'avatar');
+            }])
             ->latest()
             ->get();
 
@@ -227,8 +234,11 @@ public function updateComment(Request $request, Home $home, Comment $comment)
     {
         $category = Category::where('slug', $slug)->firstOrFail();
 
+        // เพิ่ม select avatar ในการ load user
         $posts = Home::where('category', $category->name)
-            ->with('user')
+            ->with(['user' => function($q) {
+                $q->select('id', 'name', 'email', 'avatar');
+            }])
             ->withCount('comments')
             ->latest()
             ->paginate(10);
@@ -238,7 +248,10 @@ public function updateComment(Request $request, Home $home, Comment $comment)
 
     public function myPosts()
     {
-        $posts = Home::with('user')->withCount('comments')
+        // เพิ่ม select avatar ในการ load user
+        $posts = Home::with(['user' => function($q) {
+            $q->select('id', 'name', 'email', 'avatar');
+        }])->withCount('comments')
             ->where('user_id', auth()->id())
             ->latest()->paginate(10);
 
