@@ -150,9 +150,7 @@
         {{-- only admin --}}
         @auth
           @if(Auth::user()->role === 'admin')
-            <a href="{{ route('admin.categories.index') }}" class="main-link">
-              🛠 จัดการหมวดหมู่
-            </a>
+            <a href="{{ route('admin.dashboard') }}" class="main-link">แอดมิน</a>
           @endif
         @endauth
 

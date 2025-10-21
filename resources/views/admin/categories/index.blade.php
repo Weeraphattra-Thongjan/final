@@ -1,4 +1,4 @@
-@extends('layout')
+{{-- @extends('layout')
 
 @section('content')
 <style>
@@ -108,14 +108,14 @@
           @endforelse
         </tbody>
       </table>
-    </div>
+    </div> --}}
 
     {{-- ถ้ามี paginate ส่งมาด้วย --}}
-    @if(method_exists($categories,'links'))
+    {{-- @if(method_exists($categories,'links'))
       <div class="mt-3">
         {{ $categories->withQueryString()->links() }}
       </div>
     @endif
   </div>
 </div>
-@endsection
+@endsection --}}

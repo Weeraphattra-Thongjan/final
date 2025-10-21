@@ -118,24 +118,25 @@
   @endif
 
   {{-- 🧩 หมวดหมู่ --}}
-  <div id="categories" class="mt-5 mb-5 p-4 rounded-4" style="background-color:#f8f9fa;">
-    <h3 class="text-center mb-4 categories-title">หมวดหมู่</h3>
+  <section id="categories" class="mt-4">
+    <h5 class="mb-3">หมวดหมู่</h5>
 
-    <div class="category-grid categories-section">
-      <a href="{{ route('categories.show','general') }}" class="category-link"><div class="category-card"><span class="icon">🌈</span><div class="label">ทั่วไป</div></div></a>
-      <a href="{{ route('categories.show','love') }}" class="category-link"><div class="category-card"><span class="icon">❤️</span><div class="label">ความรัก</div></div></a>
-      <a href="{{ route('categories.show','food') }}" class="category-link"><div class="category-card"><span class="icon">🍜</span><div class="label">อาหาร</div></div></a>
-      <a href="{{ route('categories.show','beauty') }}" class="category-link"><div class="category-card"><span class="icon">👗</span><div class="label">ความงาม</div></div></a>
-      <a href="{{ route('categories.show','travel') }}" class="category-link"><div class="category-card"><span class="icon">✈️</span><div class="label">ท่องเที่ยว</div></div></a>
-      <a href="{{ route('categories.show','entertainment') }}" class="category-link"><div class="category-card"><span class="icon">🎬</span><div class="label">บันเทิง</div></div></a>
-      <a href="{{ route('categories.show','technology') }}" class="category-link"><div class="category-card"><span class="icon">💻</span><div class="label">เทคโนโลยี</div></div></a>
-      <a href="{{ route('categories.show','health') }}" class="category-link"><div class="category-card"><span class="icon">🧘</span><div class="label">สุขภาพ</div></div></a>
-      <a href="{{ route('categories.show','study') }}" class="category-link"><div class="category-card"><span class="icon">📚</span><div class="label">การเรียน</div></div></a>
-      <a href="{{ route('categories.show','sport') }}" class="category-link"><div class="category-card"><span class="icon">⚽</span><div class="label">กีฬา</div></div></a>
-      <a href="{{ route('categories.show','pet') }}" class="category-link"><div class="category-card"><span class="icon">🐶</span><div class="label">สัตว์เลี้ยง</div></div></a>
-      <a href="{{ route('categories.show','career') }}" class="category-link"><div class="category-card"><span class="icon">🧠</span><div class="label">งาน / อาชีพ</div></div></a>
+    @if($categories->isEmpty())
+      <div class="text-muted">ยังไม่มีหมวดหมู่</div>
+    @else
+      <div class="row g-3">
+      @foreach($categories as $cat)
+        <div class="col-6 col-md-3 col-lg-2">
+          <a href="{{ route('categories.show', $cat->slug) }}"
+             class="d-flex flex-column align-items-center justify-content-center text-decoration-none"
+             style="background:#fff;border:1px solid #ececf3;border-radius:14px;padding:16px;box-shadow:0 6px 18px rgba(31,27,58,.06);height:90px;">
+            <div class="fw-semibold text-center" style="color:#1f1b3a">{{ $cat->name }}</div>
+          </a>
+        </div>
+      @endforeach
     </div>
-  </div>
+  @endif
+</section>
 
   {{-- 📰 ลิสต์โพสต์ --}}
   @php

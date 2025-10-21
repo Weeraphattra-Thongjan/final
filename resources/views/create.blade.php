@@ -109,24 +109,25 @@
 
     <div class="mb-3">
       <label for="category_id">หมวดหมู่</label>
-      <select name="category_id" id="category_id" required>
+      <select name="category_id" class="form-select" required>
         <option value="">-- เลือกหมวดหมู่ --</option>
-        @foreach ($categories as $cat)
-          <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
-            {{ $cat->name }}
-          </option>
+        @foreach($categories as $cat)
+            <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>
+                {{ $cat->name }}
+            </option>
         @endforeach
-      </select>
+    </select>
+    @error('category_id') <div class="text-danger small">{{ $message }}</div> @enderror
+
     </div>
 
-    <div class="mb-3">
-      <label for="image">อัปโหลดรูป</label>
-      <input type="file" name="image" id="image">
-    </div>
+    <div class="mb-3">            
+      <label class="form-label fw-bold">อัปโหลดรูป</label>
+      {{-- 📸 ต้องมี enctype="multipart/form-data" ถึงจะส่งไฟล์ได้ --}}
+      <input type="file" name="image" accept="image/*" class="form-control">
+      </div>
 
-    <div class="button-row">
-      <button type="submit" class="btn-primary">โพสต์</button>
-    </div>
+      <button type="submit" class="btn-primary">โพสต์</button>    
   </form>
 </div>
 @endsection

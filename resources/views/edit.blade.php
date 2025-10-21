@@ -78,7 +78,6 @@
 
   <div class="mt-4 d-flex gap-2">
     <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
-    <a href="{{ route('posts.show', $home->id) }}" class="btn btn-secondary">กลับ</a>
   </div>
 </form>
 

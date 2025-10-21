@@ -1,4 +1,4 @@
-@extends('layout')
+{{-- @extends('layout')
 
 @section('content')
 <style>
@@ -88,4 +88,4 @@
 </form>
 
 </div>
-@endsection
+@endsection --}}

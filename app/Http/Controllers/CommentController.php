@@ -66,4 +66,20 @@ class CommentController extends Controller
             ->route('posts.show', ['home' => $home->id])
             ->with('success', 'ลบคอมเมนต์เรียบร้อยแล้ว');
     }
+
+    public function edit(Comment $comment)
+    {
+        $this->authorize('update', $comment);
+        return view('comments.edit', compact('comment'));
+    }
+
+    public function update(Request $request, Comment $comment)
+    {
+        $this->authorize('update', $comment);
+        $validated = $request->validate([
+            'body' => 'required|string|max:5000',
+        ]);
+        $comment->update($validated);
+        return back()->with('success', 'แก้ไขความเห็นแล้ว');
+    }
 }

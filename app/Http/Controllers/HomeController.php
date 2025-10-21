@@ -7,6 +7,7 @@ use App\Models\Comment;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
@@ -15,22 +16,23 @@ class HomeController extends Controller
      * หน้าแรก: แสดงโพสต์ทั้งหมด (public)
      */
     public function index()
-    {
-        $posts = Home::with('user')
-            ->withCount('comments')
-            ->latest()
-            ->paginate(10); // แบ่งหน้าให้ลื่นขึ้น (ปรับจำนวนได้)
+{
+    $posts = Home::with('user')->withCount('comments')->latest()->paginate(10);
 
-        return view('index', compact('posts'));
-    }
+    $categories = Cache::remember('homepage.categories', 300, function () {
+        return Category::orderBy('name')->get(['id','name','slug']);
+    });
+
+    return view('index', compact('posts', 'categories'));
+}
 
     /**
      * ฟอร์มสร้างโพสต์ (ต้องล็อกอิน)
      */
     public function create()
     {
-        $categories = Category::all(); // ดึงข้อมูลจากตาราง categories
-        return view('create', compact('categories'));
+        $categories = \App\Models\Category::orderBy('name')->get(['id','name','slug']);
+    return view('create', compact('categories'));
     }
 
     /**
@@ -58,30 +60,34 @@ class HomeController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Home::class);
+
         $validated = $request->validate([
-            'title'       => ['required', 'string', 'max:255'],
-            'content'     => ['required', 'string'],
-            'category_id' => ['required', 'exists:categories,id'],
-            'image'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
+            'title' => 'required|string|max:255',
+            'content'  => 'required|string',
+            'category_id' => 'nullable|exists:categories,id',
+            'image'       => 'nullable|image|max:4096',
         ]);
 
-        $category = Category::findOrFail($validated['category_id']);
+        $post = new \App\Models\Home();
+        $post->title   = $validated['title'];
+        $post->content = $validated['content'];
+        $post->user_id = auth()->id();
 
-        $home = new Home();
-        $home->title    = $validated['title'];
-        $home->content  = $validated['content'];
-        $home->category = $category->name;
-        $home->user_id  = Auth::id();
-
-        if ($request->hasFile('image')) {
-            $home->image = $request->file('image')->store('home_images', 'public');
+        // ถ้าใช้โครงสร้างที่เก็บชื่อหมวดไว้ในคอลัมน์ 'category'
+        if (!empty($validated['category_id'])) {
+            $cat = \App\Models\Category::find($validated['category_id']);
+            $post->category = $cat?->name; 
         }
 
-        $home->save();
+        // ✅ อัปโหลดรูปลง disk 'public' แล้วเก็บพาธสัมพัทธ์ เช่น posts/xxx.jpg
+        if ($request->hasFile('image')) {
+            $post->image = $request->file('image')->store('posts', 'public');
+        }
 
-        return redirect()
-            ->route('posts.show', ['home' => $home->id])
-            ->with('success', 'โพสต์ของคุณถูกสร้างเรียบร้อยแล้ว');
+        $post->save();
+
+        return redirect()->route('posts.show', $post)->with('success', 'สร้างโพสต์แล้ว');
     }
 
     /**
@@ -89,10 +95,9 @@ class HomeController extends Controller
      */
     public function edit(Home $home)
     {
-        abort_unless($home->user_id === Auth::id() || Auth::user()->role === 'admin', 403);
-
-        $categories = Category::orderBy('name')->get();
-        return view('edit', compact('home', 'categories'));
+        $this->authorize('update', $home);
+        $categories = \App\Models\Category::all();
+        return view('edit', compact('home','categories'));
     }
 
     /**
@@ -100,30 +105,33 @@ class HomeController extends Controller
      */
     public function update(Request $request, Home $home)
     {
-        abort_unless($home->user_id === Auth::id() || Auth::user()->role === 'admin', 403);
+        $this->authorize('update', $home);
 
         $validated = $request->validate([
-            'title'       => ['required', 'string', 'max:255'],
-            'content'     => ['required', 'string'],
-            'category_id' => ['required', 'exists:categories,id'],
-            'image'       => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
+            'title' => 'required|string|max:255',
+            'content'  => 'required|string',
+            'category_id' => 'nullable|exists:categories,id',
+            'image'       => 'nullable|image|max:4096',
         ]);
 
-        $category = Category::findOrFail($validated['category_id']);
+        $home->title   = $validated['title'];
+        $home->content = $validated['content'];
 
-        $home->title    = $validated['title'];
-        $home->content  = $validated['content'];
-        $home->category = $category->name;
+        if (!empty($validated['category_id'])) {
+            $cat = \App\Models\Category::find($validated['category_id']);
+            $home->category = $cat?->name;
+        }
 
+        // ✅ ลบรูปเก่า (ถ้ามี) แล้วอัปโหลดใหม่ลง disk 'public'
         if ($request->hasFile('image')) {
-            $home->image = $request->file('image')->store('home_images', 'public');
+            if ($home->image) {
+                Storage::disk('public')->delete($home->image);
+            }
+            $home->image = $request->file('image')->store('posts', 'public');
         }
 
         $home->save();
-
-        return redirect()
-            ->route('posts.show', ['home' => $home->id])
-            ->with('success', 'โพสต์ของคุณได้รับการอัปเดตแล้ว');
+        return redirect()->route('posts.show', $home)->with('success', 'แก้ไขโพสต์แล้ว');
     }
 
     /**
@@ -131,13 +139,9 @@ class HomeController extends Controller
      */
     public function destroy(Home $home)
     {
-        abort_unless($home->user_id === Auth::id() || Auth::user()->role === 'admin', 403);
-
+        $this->authorize('delete', $home);
         $home->delete();
-
-        return redirect()
-            ->route('index')
-            ->with('success', 'โพสต์ของคุณถูกลบแล้ว');
+        return redirect()->route('index')->with('success', 'ลบโพสต์แล้ว');
     }
 
     /**
@@ -223,5 +227,14 @@ public function updateComment(Request $request, Home $home, Comment $comment)
             ->paginate(10);
 
         return view('categories.show', compact('category', 'posts'));
+    }
+
+    public function myPosts()
+    {
+        $posts = Home::with('user')->withCount('comments')
+            ->where('user_id', auth()->id())
+            ->latest()->paginate(10);
+
+        return view('my-posts', compact('posts'));
     }
 }

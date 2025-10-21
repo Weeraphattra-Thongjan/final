@@ -1,4 +1,4 @@
-@extends('layout')
+{{-- @extends('layout')
 
 @section('content')
     <style>
@@ -31,4 +31,4 @@
   <button class="btn btn-success">บันทึก</button>
   <a href="{{ route('admin.categories.index') }}" class="btn btn-secondary">ยกเลิก</a>
 </form>
-@endsection
+@endsection --}}
