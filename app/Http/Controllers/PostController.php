@@ -37,12 +37,14 @@ class PostController extends Controller
         $request->validate([
             'title'       => 'required|string|max:255',
             'content'     => 'required|string',
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'nullable|exists:categories,id',
             'image'       => 'nullable|image|max:2048',
         ]);
 
         $data = $request->only(['title','content','category_id']);
         $data['user_id'] = Auth::id();
+
+        $data['category_id'] = $request->filled('category_id') ? $request->input('category_id') : null;
 
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('posts', 'public');
@@ -80,7 +82,7 @@ class PostController extends Controller
         $request->validate([
             'title'       => 'required|string|max:255',
             'content'     => 'required|string',
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'nullable|exists:categories,id',
             'image'       => 'nullable|image|max:2048',
         ]);
 
@@ -92,6 +94,7 @@ class PostController extends Controller
         }
 
         $data = $request->only(['title','content','category_id']);
+        $data['category_id'] = $request->filled('category_id') ? $request->input('category_id') : null;
 
         if ($request->hasFile('image')) {
             if ($post->image_path) {

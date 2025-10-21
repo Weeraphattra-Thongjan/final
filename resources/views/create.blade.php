@@ -109,7 +109,7 @@
 
     <div class="mb-3">
       <label for="category_id">หมวดหมู่</label>
-      <select name="category_id" class="form-select" required>
+      <select name="category_id" class="form-select">
         <option value="">-- เลือกหมวดหมู่ --</option>
         @foreach($categories as $cat)
             <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>

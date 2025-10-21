@@ -78,6 +78,8 @@ class HomeController extends Controller
         if (!empty($validated['category_id'])) {
             $cat = \App\Models\Category::find($validated['category_id']);
             $post->category = $cat?->name; 
+        } else {
+            $post->category = null;
         }
 
         // ✅ อัปโหลดรูปลง disk 'public' แล้วเก็บพาธสัมพัทธ์ เช่น posts/xxx.jpg
@@ -96,8 +98,11 @@ class HomeController extends Controller
     public function edit(Home $home)
     {
         $this->authorize('update', $home);
-        $categories = \App\Models\Category::all();
-        return view('edit', compact('home','categories'));
+
+        $categories = \App\Models\Category::orderBy('name')->get(['id','name','slug']);
+        $selectedId = \App\Models\Category::where('name', $home->category)->value('id'); // อาจเป็น null
+
+        return view('edit', compact('home','categories','selectedId'));
     }
 
     /**
@@ -120,6 +125,8 @@ class HomeController extends Controller
         if (!empty($validated['category_id'])) {
             $cat = \App\Models\Category::find($validated['category_id']);
             $home->category = $cat?->name;
+        } else {
+            $home->category = null;
         }
 
         // ✅ ลบรูปเก่า (ถ้ามี) แล้วอัปโหลดใหม่ลง disk 'public'
